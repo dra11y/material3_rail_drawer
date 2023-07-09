@@ -1,0 +1,23 @@
+name: material3_rail_drawer_example
+description: An example for the material3_rail_drawer package.
+version: 0.0.1
+homepage:
+publish_to: none
+
+environment:
+  sdk: '>=3.0.5 <4.0.0'
+  flutter: ">=3.3.0"
+
+dependencies:
+  material3_rail_drawer:
+    path: ../
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
