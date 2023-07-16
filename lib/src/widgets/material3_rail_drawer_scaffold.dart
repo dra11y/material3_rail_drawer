@@ -4,10 +4,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'destination.dart';
-import 'material3_rail_drawer_drawer.dart';
+import '../material3/material3.dart';
+import '../navigation/navigation.dart';
+import 'drawer/drawer.dart';
 import 'material3_rail_drawer_shell.dart';
-import 'navigation_state.dart';
+import 'window_size_changed_detector.dart';
 
 class Material3RailDrawerScaffold extends StatefulWidget {
   const Material3RailDrawerScaffold({
@@ -15,8 +16,8 @@ class Material3RailDrawerScaffold extends StatefulWidget {
     required this.title,
     required this.routerState,
     required this.destinations,
+    required this.animationTheme,
     required this.navigationShell,
-    required this.mobileBreakpoint,
     this.drawerWidth,
     this.drawerItemIndent,
     this.drawerItemHeight,
@@ -39,8 +40,8 @@ class Material3RailDrawerScaffold extends StatefulWidget {
   final GoRouterState routerState;
   final String title;
   final List<Destination> destinations;
+  final RailDrawerAnimationTheme animationTheme;
   final StatefulNavigationShell navigationShell;
-  final double mobileBreakpoint;
   final PreferredSizeWidget? appBar;
   final Widget? bottomSheet;
   final double? drawerWidth;
@@ -66,11 +67,12 @@ class Material3RailDrawerScaffold extends StatefulWidget {
 
 class _Material3RailDrawerScaffoldState
     extends State<Material3RailDrawerScaffold> {
-  late bool isMobile = false;
+  late WindowSize windowSize =
+      WindowSize.fromWidth(MediaQuery.sizeOf(context).width);
   late NavigationState navigationState =
       NavigationState.initial(destinations: widget.destinations);
-  late bool isDrawerOpen =
-      !isMobile && navigationState.current.root.children.isNotEmpty;
+  late bool isDrawerOpen = windowSize.isMediumOrExpanded &&
+      navigationState.current.root.children.isNotEmpty;
 
   void _onDestinationSelected(Destination destination) {
     setState(() {
@@ -113,8 +115,9 @@ class _Material3RailDrawerScaffoldState
   }
 
   Widget _buildNavigationDrawer() => Material3RailDrawerDrawer(
-        key: ValueKey(isMobile),
-        isModal: isMobile,
+        key: ValueKey(windowSize),
+        windowSize: windowSize,
+        animationTheme: widget.animationTheme,
         drawerItemIndent: widget.drawerItemIndent ?? 12.0,
         navigationState: navigationState,
         onDestinationSelected: _onDestinationSelected,
@@ -144,7 +147,8 @@ class _Material3RailDrawerScaffoldState
           backgroundColor: navigationDrawerTheme.backgroundColor ??
               drawerTheme.backgroundColor ??
               colorScheme.surface,
-          elevation: navigationDrawerTheme.elevation ?? (isMobile ? 1.0 : 0.0),
+          elevation: navigationDrawerTheme.elevation ??
+              (windowSize.isCompact ? 1.0 : 0.0),
           tileHeight: widget.drawerItemHeight ??
               navigationDrawerTheme.tileHeight ??
               defaultIndicatorHeight,
@@ -167,35 +171,33 @@ class _Material3RailDrawerScaffoldState
         backgroundColor: Theme.of(context).colorScheme.background,
         body: Stack(
           children: [
-            Builder(builder: (context) {
-              final newMobile =
-                  MediaQuery.sizeOf(context).width < widget.mobileBreakpoint;
-              if (newMobile != isMobile) {
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  setState(() {
-                    isMobile = newMobile;
-                  });
+            WindowSizeChangedDetector(
+              windowSize: windowSize,
+              onChanged: (type) {
+                setState(() {
+                  windowSize = type;
                 });
-              }
-              return const SizedBox.shrink();
-            }),
+              },
+            ),
             Material3RailDrawerShell(
-              isMobile: isMobile,
+              windowSize: windowSize,
               isDrawerOpen: isDrawerOpen,
               navigationState: navigationState,
+              animationTheme: widget.animationTheme,
               navigationShell: widget.navigationShell,
-              navigationDrawer: isMobile ? null : _buildNavigationDrawer(),
+              inlineNavigationDrawer:
+                  windowSize.isCompact ? null : _buildNavigationDrawer(),
               onDestinationSelected: _onDestinationSelected,
               onTapDrawerToggleButton: _onTapDrawerToggleButton,
             ),
           ],
         ),
-        drawer: isMobile
+        drawer: windowSize.isCompact
             ? BlockSemantics(
                 child: _buildNavigationDrawer(),
               )
             : null,
-        appBar: isMobile
+        appBar: windowSize.isCompact
             ? (widget.appBar ??
                 AppBar(
                   forceMaterialTransparency: true,

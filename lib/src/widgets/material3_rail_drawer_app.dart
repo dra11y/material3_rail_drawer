@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material3_rail_drawer/material3_rail_drawer.dart';
+
+import '../material3/material3.dart';
+import '../navigation/navigation.dart';
+import 'material3_rail_drawer_scaffold.dart';
 
 class Material3RailDrawerApp extends StatelessWidget {
   const Material3RailDrawerApp({
     super.key,
-    this.mobileBreakpoint = 600,
-    this.appBar,
     required this.title,
     required this.destinations,
+    this.animationTheme = const RailDrawerAnimationTheme(),
+    this.appBar,
     this.drawerWidth,
     this.drawerItemIndent,
     this.drawerItemHeight,
@@ -34,14 +37,14 @@ class Material3RailDrawerApp extends StatelessWidget {
     this.showSemanticsDebugger = false,
     this.supportedLocales = const <Locale>[Locale('en', 'US')],
     this.theme,
-    this.themeAnimationCurve = Curves.linear,
+    this.themeAnimationCurve = Curves.easeInOutCubicEmphasized,
     this.themeAnimationDuration = kThemeAnimationDuration,
     this.themeMode = ThemeMode.system,
   });
 
-  final double mobileBreakpoint;
   final AppBar? appBar;
   final List<Destination> destinations;
+  final RailDrawerAnimationTheme animationTheme;
   final double? drawerWidth;
   final double? drawerItemIndent;
   final double? drawerItemHeight;
@@ -103,11 +106,11 @@ class Material3RailDrawerApp extends StatelessWidget {
                   routerState: state,
                   title: title,
                   destinations: destinations,
+                  animationTheme: animationTheme,
                   drawerWidth: drawerWidth,
                   drawerItemIndent: drawerItemIndent,
                   drawerItemHeight: drawerItemHeight,
                   navigationShell: navigationShell,
-                  mobileBreakpoint: mobileBreakpoint,
                   extendBodyBehindAppBar: false,
                   appBar: appBar,
                 ),

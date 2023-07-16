@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:material3_rail_drawer/src/navigation_state.dart';
 
-import 'destination.dart';
-import 'drawer_components.dart';
+import '../../material3/material3.dart';
+import '../../navigation/navigation.dart';
+import 'drawer_root_list.dart';
+import 'drawer_sub_list.dart';
+import 'toggle_drawer_button.dart';
 
 class ColorMaterialPage extends MaterialPage {
   ColorMaterialPage({
@@ -21,25 +22,35 @@ class ColorMaterialPage extends MaterialPage {
         );
 }
 
-class Material3RailDrawerDrawer extends HookWidget {
+class Material3RailDrawerDrawer extends StatefulWidget {
   const Material3RailDrawerDrawer({
     super.key,
-    required this.isModal,
+    required this.windowSize,
     required this.navigationState,
+    required this.animationTheme,
     required this.drawerItemIndent,
     required this.onDestinationSelected,
     this.onTapDrawerToggleButton,
   });
 
-  final bool isModal;
+  final WindowSize windowSize;
   final NavigationState navigationState;
+  final RailDrawerAnimationTheme animationTheme;
   final double drawerItemIndent;
   final ValueChanged<Destination> onDestinationSelected;
   final void Function(ScaffoldState)? onTapDrawerToggleButton;
 
   @override
+  State<Material3RailDrawerDrawer> createState() =>
+      _Material3RailDrawerDrawerState();
+}
+
+class _Material3RailDrawerDrawerState extends State<Material3RailDrawerDrawer>
+    with SingleTickerProviderStateMixin {
+  late bool isRoot = widget.windowSize.isCompact;
+
+  @override
   Widget build(BuildContext context) {
-    final isRoot = useState(isModal);
     final colorScheme = Theme.of(context).colorScheme;
     final backgroundColor = NavigationDrawerTheme.of(context).backgroundColor ??
         DrawerTheme.of(context).backgroundColor ??
@@ -49,27 +60,27 @@ class Material3RailDrawerDrawer extends HookWidget {
 
     return Semantics(
       container: true,
-      label: isModal
+      label: widget.windowSize.isMediumOrExpanded
           ? null
-          : 'Secondary navigation: ${navigationState.current.root.label}',
+          : 'Secondary navigation: ${widget.navigationState.current.root.label}',
       child: Drawer(
         child: OverflowBox(
           maxWidth: DrawerTheme.of(context).width!,
           alignment: Alignment.centerRight,
           child: Column(
             children: [
-              if (isModal)
+              if (widget.windowSize.isCompact)
                 Padding(
                   padding: const EdgeInsets.only(left: 6, top: 4, bottom: 8),
                   child: ToggleDrawerButton(
                     isOpen: true,
-                    onPressed: onTapDrawerToggleButton,
+                    onPressed: widget.onTapDrawerToggleButton,
                   ),
                 ),
               Expanded(
                 child: Semantics(
                   container: true,
-                  child: isModal
+                  child: widget.windowSize.isCompact
                       ? Navigator(
                           pages: [
                             ColorMaterialPage(
@@ -77,39 +88,49 @@ class Material3RailDrawerDrawer extends HookWidget {
                               elevation: elevation,
                               surfaceTintColor: surfaceTintColor,
                               child: DrawerRootList(
-                                drawerItemIndent: drawerItemIndent,
-                                navigationState: navigationState,
+                                key: ValueKey(widget
+                                    .navigationState.current.root.fullPath),
+                                drawerItemIndent: widget.drawerItemIndent,
+                                navigationState: widget.navigationState,
                                 onDestinationSelected: (destination) {
                                   if (destination.children.isNotEmpty) {
-                                    isRoot.value = false;
+                                    setState(() {
+                                      isRoot = false;
+                                    });
                                   }
-                                  onDestinationSelected(destination);
+                                  widget.onDestinationSelected(destination);
                                 },
                               ),
                             ),
-                            if (!isRoot.value)
+                            if (!isRoot)
                               ColorMaterialPage(
                                   color: backgroundColor,
                                   elevation: elevation,
                                   surfaceTintColor: surfaceTintColor,
                                   child: DrawerSubList(
-                                    drawerItemIndent: drawerItemIndent,
+                                    key: ValueKey(widget
+                                        .navigationState.current.root.fullPath),
+                                    drawerItemIndent: widget.drawerItemIndent,
                                     hasBackButton: true,
-                                    navigationState: navigationState,
+                                    animationTheme: widget.animationTheme,
+                                    navigationState: widget.navigationState,
                                     onDestinationSelected:
-                                        onDestinationSelected,
+                                        widget.onDestinationSelected,
                                   )),
                           ],
                           onPopPage: (route, result) {
-                            isRoot.value = true;
+                            setState(() {
+                              isRoot = true;
+                            });
                             return route.didPop(result);
                           },
                         )
                       : DrawerSubList(
-                          drawerItemIndent: drawerItemIndent,
+                          drawerItemIndent: widget.drawerItemIndent,
                           hasBackButton: false,
-                          navigationState: navigationState,
-                          onDestinationSelected: onDestinationSelected,
+                          animationTheme: widget.animationTheme,
+                          navigationState: widget.navigationState,
+                          onDestinationSelected: widget.onDestinationSelected,
                         ),
                 ),
               ),

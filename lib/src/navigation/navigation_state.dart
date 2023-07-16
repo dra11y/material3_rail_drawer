@@ -17,6 +17,13 @@ class NavigationState {
   final Destination? previous;
   final Set<Destination> expanded;
 
+  Destination get root => current.root;
+  String get rootPath => current.root.path;
+
+  /// JSON serialization keys
+  static const String currentKey = 'current';
+  static const String expandedKey = 'expanded';
+
   static NavigationState initial({required List<Destination> destinations}) =>
       NavigationState(
         destinations: destinations,
@@ -30,12 +37,16 @@ class NavigationState {
       destinations: destinations,
       current: shouldChange ? destination : current,
       previous: shouldChange ? current : previous,
-      expanded: {
-        ...expanded.whereNot((d) => d == destination),
-        ...destination.ancestors,
-        if (destination.children.isNotEmpty && !expanded.contains(destination))
-          destination,
-      },
+      expanded: destination.isRoot
+          ? expanded
+          : {
+              ...expanded.whereNot((d) => d == destination),
+              ...destination.ancestors,
+              if (!destination.isRoot &&
+                  destination.children.isNotEmpty &&
+                  !expanded.contains(destination))
+                destination,
+            },
     );
   }
 
@@ -64,10 +75,10 @@ class NavigationState {
   NavigationState updateWithJson(Map json) {
     return NavigationState(
       destinations: destinations,
-      current: findDestination(json['selectedDestination'])!,
+      current: findDestination(json[currentKey])!,
       previous: current,
       expanded: {
-        ...json['expandedDestinations']
+        ...json[expandedKey]
             .map((fullPath) => findDestination(fullPath))
             .whereType<Destination>(),
       },
@@ -75,8 +86,8 @@ class NavigationState {
   }
 
   Map toJson() => {
-        'selectedDestination': current.fullPath,
-        'expandedDestinations': expanded.map((d) => d.fullPath).toList(),
+        currentKey: current.fullPath,
+        expandedKey: expanded.map((d) => d.fullPath).toList(),
       };
 
   @override
@@ -89,5 +100,5 @@ class NavigationState {
 
   @override
   String toString() =>
-      'NavigationState(selectedDestination: $current, expandedDestinations: $expanded)';
+      '$runtimeType($currentKey: $current, $expandedKey: $expanded)';
 }

@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material3_rail_drawer/src/clamp_at_zero_extension.dart';
 
-import 'destination.dart';
-import 'drawer_components.dart';
-import 'navigation_state.dart';
+import '../material3/material3.dart';
+import '../navigation/navigation.dart';
+import '../util/util.dart';
+import 'drawer/toggle_drawer_button.dart';
 
 class Material3RailDrawerShell extends StatelessWidget {
   const Material3RailDrawerShell({
     super.key,
-    required this.isMobile,
+    required this.windowSize,
     required this.isDrawerOpen,
     required this.navigationState,
-    this.navigationDrawer,
+    required this.animationTheme,
+    this.inlineNavigationDrawer,
     required this.navigationShell,
     required this.onDestinationSelected,
     required this.onTapDrawerToggleButton,
   });
 
-  final bool isMobile;
+  final WindowSize windowSize;
   final bool isDrawerOpen;
   final NavigationState navigationState;
-  final Widget? navigationDrawer;
+  final RailDrawerAnimationTheme animationTheme;
+  final Widget? inlineNavigationDrawer;
   final StatefulNavigationShell navigationShell;
   final ValueChanged<Destination> onDestinationSelected;
   final void Function(ScaffoldState) onTapDrawerToggleButton;
@@ -37,10 +39,10 @@ class Material3RailDrawerShell extends StatelessWidget {
         SizedBox(
           width: railMinWidth,
           child: OverflowBox(
-            key: ValueKey(isMobile),
+            key: ValueKey(windowSize),
             maxWidth: railMinWidth,
             alignment: Alignment.centerRight,
-            child: isMobile
+            child: windowSize.isCompact
                 ? null
                 : Semantics(
                     container: true,
@@ -79,11 +81,12 @@ class Material3RailDrawerShell extends StatelessWidget {
                   ),
           ),
         ),
-        if (navigationDrawer != null)
+        if (inlineNavigationDrawer != null)
           AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+            duration: animationTheme.inlineDrawerOpenCloseDuration,
+            curve: animationTheme.inlineDrawerOpenCloseCurve,
             width: isDrawerOpen ? drawerWidth : 0,
-            child: navigationDrawer!,
+            child: inlineNavigationDrawer!,
           ),
         Expanded(
           child: Semantics(

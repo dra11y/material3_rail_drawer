@@ -1,6 +1,6 @@
 library material3_rail_drawer;
 
-export 'src/material3_rail_drawer_app.dart';
-export 'src/material3_rail_drawer_scaffold.dart';
-export 'src/destination.dart';
-export 'src/destination_builder.dart';
+export 'src/material3/material3.dart';
+export 'src/navigation/navigation.dart';
+export 'src/util/util.dart';
+export 'src/widgets/widgets.dart';
